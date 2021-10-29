@@ -1,0 +1,20 @@
+@use 'sass:math';
+
+@function z($name) {
+  @if index($z-indexes, $name) {
+    @return (length($z-indexes) - index($z-indexes, $name)) + 1;
+  } @else {
+    @warn 'There is no item "#{$name}" in this list; Choose one of: #{$z-indexes}';
+
+    @return null;
+  }
+}
+
+// Mixin Viewport Width
+@function vw($width) {
+  @return 100 * math.div($width, 1380) * 1vw;
+}
+
+@function vwM($width) {
+  @return 100 * math.div($width, 420) * 1vw;
+}

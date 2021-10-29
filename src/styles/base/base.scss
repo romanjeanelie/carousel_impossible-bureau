@@ -1,0 +1,49 @@
+*,
+*:after,
+*:before {
+  box-sizing: border-box;
+}
+
+html {
+  // @extend %cover;
+}
+
+body {
+  // @extend %cover;
+  font-family: Poppins;
+  background: $white;
+  // height: 1500vw;
+
+  &.is-dragged {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  ::selection {
+    background-color: rgba($yellow, 0.3);
+  }
+}
+
+.App {
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  position: fixed;
+}
+
+a {
+  color: inherit;
+  outline: none;
+  text-decoration: none;
+}
+
+button {
+  background: transparent;
+  border: transparent;
+  cursor: pointer;
+}
