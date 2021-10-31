@@ -33,6 +33,7 @@ const Map = styled.div`
   transform: translateX(-50%);
   height: 3rem;
   display: flex;
+
   span {
     width: 3px;
     height: 100%;
@@ -41,15 +42,25 @@ const Map = styled.div`
   }
 `;
 
-const ImageContainer = styled.div`
-  /* transform: translateX(-50%); */
-  border: 1px solid red;
+const Title = styled.div`
+  z-index: 2;
+  position: fixed;
+  top: 20%;
+  left: 15%;
+  color: ${({ theme }) => theme.colors.white};
+
+  font-weight: 200;
+  text-transform: uppercase;
+  h3 {
+    font-size: 5rem;
+    letter-spacing: 0.5rem;
+  }
   p {
-    position: fixed;
-    left: 1rem;
-    bottom: 1rem;
-    color: white;
-    font-size: 2rem;
+    position: relative;
+    margin-top: 2rem;
+
+    font-size: 1.5rem;
+    letter-spacing: 0.2rem;
   }
 `;
 
@@ -76,62 +87,46 @@ const revealY = {
  * WebGL part
  */
 
-function Image({ img }) {
-  const width = img.image.width;
-  const height = img.image.height;
+function Image({ img, displayText }) {
+  const factorW = window.innerWidth * 0.6;
+  const factorH = window.innerHeight * 0.6;
+  const width = factorW;
+  const height = factorH;
 
   const visible = useRef();
 
   const data = useScroll();
 
-  const { ref, inView } = useInView({
-    threshold: 1,
-  });
-
-  useEffect(() => {
-    if (inView) {
-      console.log("visible");
-    }
-    if (!inView) {
-      console.log("hidden");
-    }
-  }, [inView]);
-
   const targetRef = useIntersect((isVisible) => (visible.current = isVisible));
   useFrame((state, delta) => {
     const scale = THREE.MathUtils.lerp(targetRef.current.scale.x, visible.current ? 1 : 0.5, delta * 2);
     targetRef.current.scale.set(scale, scale, scale);
+    const indexImgVisible = Math.round(Math.max(data.offset, 0) * data.pages);
+    displayText(indexImgVisible);
   });
 
   return (
-    <mesh ref={targetRef} position={[0, 0, 0]}>
-      <planeBufferGeometry args={[width, height, 25, 25]} />
-      <meshBasicMaterial map={img} />
-      <Html center>
-        <ImageContainer ref={ref} style={{ width: `${width}px`, height: `${height}px` }}></ImageContainer>
-      </Html>
-    </mesh>
+    <>
+      <mesh ref={targetRef} position={[0, 0, 0]}>
+        <planeBufferGeometry args={[width, height, 25, 25]} />
+        <meshBasicMaterial map={img} />
+      </mesh>
+    </>
   );
 }
 
-function Content() {
+function Content({ images }) {
   const { widthCanvas } = useThree((state) => state.viewport);
+  const imageTextures = useTexture(images);
 
-  const images = useTexture([
-    "https://picsum.photos/id/217/600/500",
-    "https://picsum.photos/id/238/600/500",
-    "https://picsum.photos/id/234/600/500",
-    "https://picsum.photos/id/232/600/500",
-    "https://picsum.photos/id/236/600/500",
-    "https://picsum.photos/id/231/600/500",
-    "https://picsum.photos/id/230/600/500",
-    "https://picsum.photos/id/229/600/500",
-    "https://picsum.photos/id/228/600/500",
-    "https://picsum.photos/id/227/600/500",
-  ]);
+  const offsets = imageTextures.map((img, i) => {
+    const widthImage = img.image.width;
+    const offset = window.innerWidth * i;
+    return offset;
+  });
 
-  return images.map((img, index) => (
-    <group key={index} position={[1400 * index, 0, 0]}>
+  return imageTextures.map((img, index) => (
+    <group key={index} position={[offsets[index], 0, 0]}>
       <Image img={img} />
     </group>
   ));
@@ -142,24 +137,39 @@ function WebglCarrousel() {
   camera.position = [0, 0, 600];
   camera.fov = 2 * Math.atan(window.innerHeight / 2 / 600) * (180 / Math.PI);
 
+  const displayText = (i) => {
+    console.log("display text", i);
+  };
+
+  const images = [
+    "https://picsum.photos/id/217/800/500",
+    "https://picsum.photos/id/238/800/500",
+    "https://picsum.photos/id/234/800/500",
+    "https://picsum.photos/id/232/800/500",
+    "https://picsum.photos/id/236/800/500",
+    "https://picsum.photos/id/231/800/500",
+    "https://picsum.photos/id/230/800/500",
+    "https://picsum.photos/id/229/800/500",
+    "https://picsum.photos/id/228/800/500",
+    "https://picsum.photos/id/227/800/500",
+  ];
+
   return (
     <WebglPage className="page" as={motion.div} variants={revealY} initial="hidden" animate="visible" exit="exit">
       <Map>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+        {images.map((img, i) => (
+          <span key={i}></span>
+        ))}
       </Map>
+      {images.map((img, i) => (
+        <Title key={i}>
+          <h3>Image Title</h3>
+          <p>image details</p>
+        </Title>
+      ))}
       <Canvas camera={{ fov: camera.fov, position: camera.position }}>
         <ScrollControls
-          pages={6} // Each page takes 100% of the height of the canvas
+          pages={images.length} // Each page takes 100% of the height of the canvas
           distance={1} // A factor that increases scroll bar travel (default: 1)
           damping={4} // Friction, higher is faster (default: 4)
           horizontal={true} // Can also scroll horizontally (default: false)
@@ -167,7 +177,7 @@ function WebglCarrousel() {
         >
           <Suspense fallback={null}>
             <Scroll>
-              <Content />
+              <Content images={images} displayText={displayText} />
             </Scroll>
           </Suspense>
         </ScrollControls>
