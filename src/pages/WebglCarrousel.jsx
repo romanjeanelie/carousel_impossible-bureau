@@ -11,7 +11,6 @@ import {
   useScroll,
   Html,
 } from "@react-three/drei";
-import { Block } from "../Block";
 
 import styled from "styled-components";
 import { motion } from "framer-motion";
