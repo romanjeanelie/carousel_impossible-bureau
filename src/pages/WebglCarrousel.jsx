@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { Suspense, useRef } from "react";
+import { Suspense, useRef, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   useTexture,
@@ -41,10 +41,16 @@ const Map = styled.div`
   }
 `;
 
-const Title = styled.div`
-  color: white;
-  font-size: 2rem;
-  transform: translateX(-50%);
+const ImageContainer = styled.div`
+  /* transform: translateX(-50%); */
+  border: 1px solid red;
+  p {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    color: white;
+    font-size: 2rem;
+  }
 `;
 
 /**
@@ -78,9 +84,22 @@ function Image({ img }) {
 
   const data = useScroll();
 
+  const { ref, inView } = useInView({
+    threshold: 1,
+  });
+
+  useEffect(() => {
+    if (inView) {
+      console.log("visible");
+    }
+    if (!inView) {
+      console.log("hidden");
+    }
+  }, [inView]);
+
   const targetRef = useIntersect((isVisible) => (visible.current = isVisible));
   useFrame((state, delta) => {
-    const scale = THREE.MathUtils.lerp(targetRef.current.scale.x, visible.current ? 1.5 : 1, delta * 2);
+    const scale = THREE.MathUtils.lerp(targetRef.current.scale.x, visible.current ? 1 : 0.5, delta * 2);
     targetRef.current.scale.set(scale, scale, scale);
   });
 
@@ -88,10 +107,8 @@ function Image({ img }) {
     <mesh ref={targetRef} position={[0, 0, 0]}>
       <planeBufferGeometry args={[width, height, 25, 25]} />
       <meshBasicMaterial map={img} />
-      <Html position={[0, -300, 0]}>
-        <Title>
-          <p>TITRE</p>
-        </Title>
+      <Html center>
+        <ImageContainer ref={ref} style={{ width: `${width}px`, height: `${height}px` }}></ImageContainer>
       </Html>
     </mesh>
   );

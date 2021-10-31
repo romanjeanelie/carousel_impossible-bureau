@@ -1,38 +1,35 @@
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { useRef, useState, useEffect, forwardRef } from "react";
-
-const slideData = [
+import { useFrame } from "@react-three/fiber";
+import { useCarrousel } from "../hooks/useCarrousel";
+import debounce from "../utils/debounce";
+/**
+ * Images
+ */
+const images = [
   {
-    index: 0,
     src: "https://picsum.photos/id/227/920/500",
   },
   {
-    index: 1,
     src: "https://picsum.photos/id/127/800/700",
   },
   {
-    index: 2,
     src: "https://picsum.photos/id/204/970/800",
   },
   {
-    index: 3,
     src: "https://picsum.photos/id/437/750/800",
   },
   {
-    index: 4,
     src: "https://picsum.photos/id/230/1200/500",
   },
   {
-    index: 5,
     src: "https://picsum.photos/id/231/900/900",
   },
   {
-    index: 6,
     src: "https://picsum.photos/id/257/880/500",
   },
   {
-    index: 7,
     src: "https://picsum.photos/id/217/870/500",
   },
 ];
@@ -104,6 +101,15 @@ const SliderControls = styled.div`
       opacity: 0.5;
     }
   }
+
+  .controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+  }
 `;
 
 /**
@@ -111,8 +117,9 @@ const SliderControls = styled.div`
  */
 const Slide = forwardRef(({ slide }, ref) => {
   const imageLoaded = (event) => {
-    event.target.style.opacity = 1;
+    console.log("img loaded");
   };
+
   const { src, headline } = slide;
   return (
     <li ref={ref} className="slide">
@@ -123,65 +130,87 @@ const Slide = forwardRef(({ slide }, ref) => {
   );
 });
 
-function ClassicCarrousel() {
-  const slides = slideData;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [offset, setOffset] = useState(0);
-
-  const itemsRef = useRef([]);
-
-  const updateIndex = (newIndex) => {
-    if (newIndex < 0) {
-      newIndex = 0;
-    } else if (newIndex >= slides.length) {
-      newIndex = slides.length - 1;
-    }
-
-    if (newIndex > activeIndex) {
-      setOffset(
-        (offset) => offset + (itemsRef.current[newIndex - 1].getBoundingClientRect().width / window.innerWidth) * 100
-      );
-    } else if (newIndex < activeIndex) {
-      setOffset(
-        (offset) => offset - (itemsRef.current[newIndex].getBoundingClientRect().width / window.innerWidth) * 100
-      );
-    }
-    setActiveIndex(newIndex);
+const useSmoothScroll = (ref) => {
+  const data = {
+    ease: 0.1,
+    current: 0,
+    previous: 0,
+    rounded: 0,
   };
 
-  useEffect(() => {}, [offset]);
+  window.addEventListener(
+    "wheel",
+    debounce((e) => {
+      data.current += e.deltaY;
+    }),
+    80
+  );
 
   useEffect(() => {
-    itemsRef.current = itemsRef.current.slice(0, slides.length);
-  }, [slides]);
+    requestAnimationFrame(() => smoothScrollingHandler());
+  }, []);
+
+  const smoothScrollingHandler = () => {
+    data.previous += (data.current - data.previous) * data.ease;
+    data.rounded = Math.round(data.previous * 100) / 100;
+    ref.current.style.transform = `translateX(-${data.previous}px)`;
+
+    // Recursive call
+    requestAnimationFrame(() => smoothScrollingHandler());
+  };
+};
+
+const ClassicCarrousel = () => {
+  const slides = images;
+  const itemsRef = useRef([]);
+  const sliderRef = useRef();
+
+  const [activeIndex, offset, next, prev] = useCarrousel(slides, itemsRef);
+
+  const handleScroll = debounce(
+    (e) => {
+      if (Math.sign(e.deltaY) === 1) {
+        next();
+      } else {
+        prev();
+      }
+    },
+    80,
+    { leading: true, trailing: false }
+  );
+  //   useEffect(() => {
+  //     document.addEventListener("keydown", (e) => {
+  //       console.log(e.key);
+  //       switch (e.key) {
+  //         case "ArrowLeft":
+  //           console.log("prev");
+  //           prev();
+  //           break;
+  //         case "ArrowRight":
+  //           next();
+  //           break;
+  //       }
+  //     });
+  //   }, []);
 
   return (
     <ClassicPage className="page" as={motion.div} variants={revealY} initial="hidden" animate="visible" exit="exit">
       <Slider className="slider">
-        <div className="slider__wrapper" style={{ transform: `translateX(-${offset}%)` }}>
+        <div ref={sliderRef} className="slider__wrapper" style={{ transform: `translateX(-${offset}%)` }}>
           {slides.map((slide, i) => {
-            return <Slide key={slide.index} slide={slide} ref={(el) => (itemsRef.current[i] = el)} />;
+            return <Slide key={i} slide={slide} ref={(el) => (itemsRef.current[i] = el)} />;
           })}
         </div>
+
         <SliderControls>
-          <button
-            onClick={() => {
-              updateIndex(activeIndex - 1);
-            }}
-          >
-            Prev
-          </button>
-          <button
-            onClick={() => {
-              updateIndex(activeIndex + 1);
-            }}
-          >
-            Next
-          </button>
+          <button onClick={prev}>Prev</button>
+          <button onClick={next}>Next</button>
+
+          <div className="controls" onWheel={handleScroll}></div>
         </SliderControls>
       </Slider>
     </ClassicPage>
   );
-}
+};
 
 export default ClassicCarrousel;
