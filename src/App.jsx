@@ -6,6 +6,7 @@ import { ThemeProvider } from "styled-components";
 
 import Home from "./pages/Home";
 import WebglCarrousel from "./pages/WebglCarrousel";
+import ClassicCarrousel from "./pages/ClassicCarrousel";
 
 const theme = {
   colors: {
@@ -30,6 +31,7 @@ function App() {
           <Switch location={location} key={location.key}>
             <Route path="/" component={Home} exact />
             <Route path="/WebglCarrousel" component={WebglCarrousel} />
+            <Route path="/ClassicCarrousel" component={ClassicCarrousel} />
           </Switch>
         </AnimatePresence>
       </ThemeProvider>
