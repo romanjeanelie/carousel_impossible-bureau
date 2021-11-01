@@ -1,21 +1,26 @@
 import * as THREE from "three";
-import { Suspense, useRef, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  useTexture,
-  ScrollControls,
-  Scroll,
-  useIntersect,
-  Bounds,
-  useBounds,
-  useScroll,
-  Html,
-} from "@react-three/drei";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useTexture, ScrollControls, Scroll, useIntersect, useScroll } from "@react-three/drei";
 
-import styled from "styled-components";
 import { motion } from "framer-motion";
+import styled from "styled-components";
 
-import { useInView } from "react-intersection-observer";
+/**
+ * Images
+ */
+const images = [
+  "https://picsum.photos/id/217/800/500",
+  "https://picsum.photos/id/238/800/500",
+  "https://picsum.photos/id/234/800/500",
+  "https://picsum.photos/id/232/800/500",
+  "https://picsum.photos/id/236/800/500",
+  "https://picsum.photos/id/231/800/500",
+  "https://picsum.photos/id/230/800/500",
+  "https://picsum.photos/id/229/800/500",
+  "https://picsum.photos/id/228/800/500",
+  "https://picsum.photos/id/227/800/500",
+];
 
 /**
  *
@@ -27,39 +32,72 @@ const WebglPage = styled.div`
 
 const Map = styled.div`
   position: absolute;
-  bottom: 5rem;
+  bottom: 7%;
   left: 50%;
   transform: translateX(-50%);
-  height: 3rem;
   display: flex;
+  align-items: flex-end;
+  height: 3rem;
 
   span {
-    width: 3px;
-    height: 100%;
+    height: 1rem;
+    width: 2px;
     margin-right: 1rem;
     background-color: ${({ theme }) => theme.colors.white};
+    &:last-of-type {
+      margin-right: 0;
+    }
+  }
+
+  .cursor__wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 1rem;
+    width: 100%;
+    transform: translate3d(0, 170%, 0);
+    .cursor {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 1rem;
+      width: 1.2rem;
+      transform: translate3d(-50%, 0, 0);
+      overflow: hidden;
+      &:after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: ${({ theme }) => theme.colors.white};
+        transform: rotate(45deg);
+        top: 75%;
+        left: 0%;
+      }
+    }
   }
 `;
 
 const Title = styled.div`
   z-index: 2;
   position: fixed;
-  top: 20%;
-  left: 15%;
+  bottom: 7%;
+  right: 10%;
+
   color: ${({ theme }) => theme.colors.white};
+  opacity: 0;
+  transition: opacity 500ms;
 
   font-weight: 200;
   text-transform: uppercase;
+  font-size: 1.4rem;
+  letter-spacing: 0.2rem;
   h3 {
-    font-size: 5rem;
-    letter-spacing: 0.5rem;
+    text-align: right;
   }
   p {
-    position: relative;
-    margin-top: 2rem;
-
-    font-size: 1.5rem;
-    letter-spacing: 0.2rem;
+    margin-top: 1rem;
+    text-transform: lowercase;
   }
 `;
 
@@ -85,8 +123,8 @@ const revealY = {
  *
  * WebGL part
  */
-
-function Image({ img, displayText }) {
+// IMAGE
+function Image({ img }) {
   const factorW = window.innerWidth * 0.6;
   const factorH = window.innerHeight * 0.6;
   const width = factorW;
@@ -94,14 +132,10 @@ function Image({ img, displayText }) {
 
   const visible = useRef();
 
-  const data = useScroll();
-
   const targetRef = useIntersect((isVisible) => (visible.current = isVisible));
   useFrame((state, delta) => {
     const scale = THREE.MathUtils.lerp(targetRef.current.scale.x, visible.current ? 1 : 0.5, delta * 2);
     targetRef.current.scale.set(scale, scale, scale);
-    const indexImgVisible = Math.round(Math.max(data.offset, 0) * data.pages);
-    displayText(indexImgVisible);
   });
 
   return (
@@ -114,56 +148,104 @@ function Image({ img, displayText }) {
   );
 }
 
-function Content({ images }) {
-  const { widthCanvas } = useThree((state) => state.viewport);
+const usePageInView = (cursor, lines) => {
+  const data = useScroll();
+  const [indexPageVisible, setIndexPageVisible] = useState(0);
+  const [isScroll, setIsScroll] = useState(false);
+
+  console.log("render usePage in view");
+  useFrame((state, delta) => {
+    if (data.delta > 0.0001) {
+      setIsScroll(true);
+    } else {
+      setIsScroll(false);
+    }
+    const scrollOffset = Math.max(data.offset, 0);
+    const newIndex = Math.floor(scrollOffset * data.pages + 0.1);
+    cursor.current.style.transform = `translate3d(${scrollOffset * 100}%, 170%, 0)`;
+
+    lines.current.forEach((line, i) => {
+      const diff = 1 - Math.abs(i - scrollOffset * 10);
+      const scale = Math.max(1 + diff, 1);
+      lines.current[i].style.transform = `scaleY(${scale})`;
+    });
+
+    if (indexPageVisible !== newIndex) {
+      setIndexPageVisible(newIndex);
+    } else {
+      return;
+    }
+  });
+
+  return [indexPageVisible, isScroll];
+};
+
+// CONTENT
+function Content({ images, displayTitle, hideTitle, cursor, lines }) {
   const imageTextures = useTexture(images);
 
   const offsets = imageTextures.map((img, i) => {
-    const widthImage = img.image.width;
     const offset = window.innerWidth * i;
     return offset;
   });
 
+  const [indexImgVisible, isScroll] = usePageInView(cursor, lines);
+
+  useEffect(() => {
+    console.log(isScroll);
+    if (isScroll) {
+      hideTitle();
+    } else {
+      displayTitle(indexImgVisible);
+    }
+  }, [isScroll, indexImgVisible]);
+
   return imageTextures.map((img, index) => (
     <group key={index} position={[offsets[index], 0, 0]}>
-      <Image img={img} />
+      <Image img={img} index={index} />
     </group>
   ));
 }
 
+const useAnimation = (refs) => {
+  const hide = () => {
+    refs.current.forEach((ref, i) => {
+      ref.style.opacity = 0;
+    });
+  };
+  const display = (i) => {
+    refs.current[i].style.opacity = 1;
+  };
+
+  return [display, hide];
+};
+
+// PAGE
 function WebglCarrousel() {
   const camera = {};
   camera.position = [0, 0, 600];
   camera.fov = 2 * Math.atan(window.innerHeight / 2 / 600) * (180 / Math.PI);
 
-  const displayText = (i) => {
-    console.log("display text", i);
-  };
-
-  const images = [
-    "https://picsum.photos/id/217/800/500",
-    "https://picsum.photos/id/238/800/500",
-    "https://picsum.photos/id/234/800/500",
-    "https://picsum.photos/id/232/800/500",
-    "https://picsum.photos/id/236/800/500",
-    "https://picsum.photos/id/231/800/500",
-    "https://picsum.photos/id/230/800/500",
-    "https://picsum.photos/id/229/800/500",
-    "https://picsum.photos/id/228/800/500",
-    "https://picsum.photos/id/227/800/500",
-  ];
+  // Animations
+  const titleRefs = useRef([]);
+  const [displayTitle, hideTitle] = useAnimation(titleRefs);
+  const cursor = useRef();
+  const lines = useRef([]);
 
   return (
     <WebglPage className="page" as={motion.div} variants={revealY} initial="hidden" animate="visible" exit="exit">
       <Map>
         {images.map((img, i) => (
-          <span key={i}></span>
+          <span key={i} ref={(el) => (lines.current[i] = el)}></span>
         ))}
+        <div className="cursor__wrapper" ref={cursor}>
+          <div className="cursor"></div>
+        </div>
       </Map>
       {images.map((img, i) => (
-        <Title key={i}>
+        <Title key={i} ref={(el) => (titleRefs.current[i] = el)}>
           <h3>Image Title</h3>
-          <p>image details</p>
+          <p>description of the image</p>
         </Title>
       ))}
       <Canvas camera={{ fov: camera.fov, position: camera.position }}>
@@ -176,7 +258,13 @@ function WebglCarrousel() {
         >
           <Suspense fallback={null}>
             <Scroll>
-              <Content images={images} displayText={displayText} />
+              <Content
+                images={images}
+                displayTitle={displayTitle}
+                hideTitle={hideTitle}
+                cursor={cursor}
+                lines={lines}
+              />
             </Scroll>
           </Suspense>
         </ScrollControls>
