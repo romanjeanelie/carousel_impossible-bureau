@@ -1,11 +1,14 @@
 import * as THREE from "three";
-import { Suspense, useState, useEffect, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useTexture, ScrollControls, Scroll, useIntersect, useScroll } from "@react-three/drei";
+import { Suspense, useState, useEffect, useRef, useMemo } from "react";
+import { Canvas, useFrame, extend } from "@react-three/fiber";
+import { useTexture, ScrollControls, Scroll, useIntersect, useScroll, shaderMaterial } from "@react-three/drei";
+// import glsl from "babel-plugin-glsl/macro";
 
+import Close from "../components/Close";
 import { motion } from "framer-motion";
 import styled from "styled-components";
-
+import vertex from "../shaders/vertex.glsl";
+import fragment from "../shaders/fragment.glsl";
 /**
  * Images
  */
@@ -88,10 +91,10 @@ const Title = styled.div`
   opacity: 0;
   transition: opacity 500ms;
 
-  font-weight: 200;
+  /* font-weight: 200; */
   text-transform: uppercase;
   font-size: 1.4rem;
-  letter-spacing: 0.2rem;
+  /* letter-spacing: 0.2rem; */
   h3 {
     text-align: right;
   }
@@ -123,6 +126,7 @@ const revealY = {
  *
  * WebGL part
  */
+
 // IMAGE
 function Image({ img }) {
   const factorW = window.innerWidth * 0.6;
@@ -131,18 +135,30 @@ function Image({ img }) {
   const height = factorH;
 
   const visible = useRef();
+  const scrollOffset = useRef();
+
+  const uniforms = useMemo(
+    () => ({
+      uTexture: { value: img },
+      uOffset: { value: scrollOffset.current },
+    }),
+    []
+  );
+
+  const data = useScroll();
 
   const targetRef = useIntersect((isVisible) => (visible.current = isVisible));
   useFrame((state, delta) => {
     const scale = THREE.MathUtils.lerp(targetRef.current.scale.x, visible.current ? 1 : 0.5, delta * 2);
     targetRef.current.scale.set(scale, scale, scale);
+    targetRef.current.material.uniforms.uOffset.value = data.delta * 100;
   });
 
   return (
     <>
       <mesh ref={targetRef} position={[0, 0, 0]}>
         <planeBufferGeometry args={[width, height, 25, 25]} />
-        <meshBasicMaterial map={img} />
+        <shaderMaterial attach="material" uniforms={uniforms} vertexShader={vertex} fragmentShader={fragment} />
       </mesh>
     </>
   );
@@ -153,7 +169,6 @@ const usePageInView = (cursor, lines) => {
   const [indexPageVisible, setIndexPageVisible] = useState(0);
   const [isScroll, setIsScroll] = useState(false);
 
-  console.log("render usePage in view");
   useFrame((state, delta) => {
     if (data.delta > 0.0001) {
       setIsScroll(true);
@@ -192,7 +207,6 @@ function Content({ images, displayTitle, hideTitle, cursor, lines }) {
   const [indexImgVisible, isScroll] = usePageInView(cursor, lines);
 
   useEffect(() => {
-    console.log(isScroll);
     if (isScroll) {
       hideTitle();
     } else {
@@ -234,6 +248,7 @@ function WebglCarrousel() {
 
   return (
     <WebglPage className="page" as={motion.div} variants={revealY} initial="hidden" animate="visible" exit="exit">
+      <Close />
       <Map>
         {images.map((img, i) => (
           <span key={i} ref={(el) => (lines.current[i] = el)}></span>
@@ -244,8 +259,8 @@ function WebglCarrousel() {
       </Map>
       {images.map((img, i) => (
         <Title key={i} ref={(el) => (titleRefs.current[i] = el)}>
-          <h3>Image Title</h3>
-          <p>description of the image</p>
+          <h3>Image {i} - Title</h3>
+          <p>image description</p>
         </Title>
       ))}
       <Canvas camera={{ fov: camera.fov, position: camera.position }}>
