@@ -125,7 +125,6 @@ const linksFadeOut = {
  */
 const Home = () => {
   const { isTablet } = useViewport();
-  console.log(isTablet);
   return (
     <HomePage className="page">
       <Header>

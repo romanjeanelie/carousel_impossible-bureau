@@ -5,7 +5,6 @@ export const useCarousel = (slides, refs) => {
   const [offset, setOffset] = useState(0);
 
   const next = () => {
-    console.log("next");
     const newIndex = activeIndex + 1;
     if (newIndex >= slides.length) return;
     setActiveIndex(newIndex);
