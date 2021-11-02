@@ -1,43 +1,48 @@
 import { Switch, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
-import GlobalStyles from "./styles/GlobalStyles";
+import { GlobalStyles } from "./styles/GlobalStyles";
 import { ThemeProvider } from "styled-components";
 
 import Home from "./pages/Home";
-import WebglCarrousel from "./pages/WebglCarrousel";
-import ClassicCarrousel from "./pages/ClassicCarrousel";
-import Test from "./pages/Test";
+import Webglcarousel from "./pages/WebglCarousel";
+import ClassicCarousel from "./pages/ClassicCarousel";
+
+import { useViewport } from "./hooks/Viewport";
 
 const theme = {
   colors: {
     white: "#F2F2E5",
-    black: "#080808",
+    black: "#0e0d0d",
   },
   fonts: {
-    main: "Arial, Helvetica, sans-serif",
+    main: "Lato, sans-serif",
     detail: "Times New Roman, Times, serif",
   },
 };
 
 function App() {
-  let location = useLocation();
+  const location = useLocation();
+  const { isPortrait } = useViewport();
 
   return (
-    <>
-      <ThemeProvider theme={theme}>
-        <GlobalStyles />
-
-        <AnimatePresence exitBeforeEnter>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
+      <AnimatePresence exitBeforeEnter>
+        {isPortrait && (
+          <div className="page rotate">
+            <p>please rotate your device</p>
+          </div>
+        )}
+        {!isPortrait && (
           <Switch location={location} key={location.key}>
             <Route path="/" component={Home} exact />
-            <Route path="/WebglCarrousel" component={WebglCarrousel} />
-            <Route path="/ClassicCarrousel" component={ClassicCarrousel} />
-            <Route path="/Test" component={Test} />
+            <Route path="/WebglCarousel" component={Webglcarousel} />
+            <Route path="/ClassicCarousel" component={ClassicCarousel} />
           </Switch>
-        </AnimatePresence>
-      </ThemeProvider>
-    </>
+        )}
+      </AnimatePresence>
+    </ThemeProvider>
   );
 }
 

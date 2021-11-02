@@ -1,7 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useViewport } from "../hooks/Viewport";
 
+// Styles
 import styled from "styled-components";
+import { device } from "../styles/GlobalStyles";
 import { motion } from "framer-motion";
 
 /**
@@ -10,18 +13,20 @@ import { motion } from "framer-motion";
 const HomePage = styled.div`
   background: ${({ theme }) => theme.colors.white};
   color: ${({ theme }) => theme.colors.black};
+  font-family: ${({ theme }) => theme.fonts.main};
 `;
 
 const Header = styled.div`
   position: absolute;
+  width: 100%;
   top: 35%;
-  right: 33%;
-
   background: ${({ theme }) => theme.colors.white};
   color: ${({ theme }) => theme.colors.black};
 `;
 
 const Title = styled.div`
+  position: relative;
+  left: 43%;
   h1 {
     font-size: 4rem;
     text-transform: uppercase;
@@ -36,31 +41,44 @@ const Title = styled.div`
       transform: translateY(60%);
     }
   }
+
+  @media ${device.mobile} {
+    h1 {
+      font-size: 2rem;
+    }
+  }
 `;
 
 const List = styled.ul`
   margin-top: 7rem;
-  width: 100%;
+  position: absolute;
+  left: 58%;
   text-align: right;
   font-size: 1.8rem;
   li {
     margin-bottom: 2rem;
-    transition: opacity 300ms;
+    a {
+      display: inline-block;
+      transition: opacity 300ms;
+      &:hover {
+        opacity: 0.5;
+      }
+    }
   }
-
-  li:hover {
-    opacity: 0.5;
-  }
-
-  li a {
-    display: block;
+  @media ${device.mobile} {
+    text-align: right;
+    margin-top: 2rem;
+    font-size: 1rem;
+    li {
+      margin-bottom: 1rem;
+    }
   }
 `;
 
 /**
  * Animations
  */
-const goUp = {
+const titleUp = {
   hidden: {
     y: "-100%",
   },
@@ -73,7 +91,8 @@ const goUp = {
     transition: { ease: "easeOut", duration: 0.5 },
   },
 };
-const goDown = {
+
+const titleDown = {
   hidden: {
     y: "100%",
   },
@@ -87,7 +106,7 @@ const goDown = {
   },
 };
 
-const fadeOut = {
+const linksFadeOut = {
   hidden: {
     opacity: 0,
   },
@@ -101,26 +120,31 @@ const fadeOut = {
   },
 };
 
+/**
+ *  Page
+ */
 const Home = () => {
+  const { isTablet } = useViewport();
+  console.log(isTablet);
   return (
     <HomePage className="page">
       <Header>
         <Title>
           <h1>
-            <motion.span variants={goUp} initial="hidden" animate="visible" exit="exit">
-              Carrousel for
+            <motion.span variants={titleUp} initial="hidden" animate="visible" exit="exit">
+              Carousel for
             </motion.span>
-            <motion.span className="italic" variants={goDown} initial="hidden" animate="visible" exit="exit">
+            <motion.span className="italic" variants={titleDown} initial="hidden" animate="visible" exit="exit">
               Impossible Bureau
             </motion.span>
           </h1>
         </Title>
-        <List as={motion.ul} variants={fadeOut} initial="hidden" animate="visible" exit="exit">
+        <List as={motion.ul} variants={linksFadeOut} initial="hidden" animate="visible" exit="exit">
           <li>
-            <Link to="/ClassicCarrousel">classic version</Link>
+            <Link to="/ClassicCarousel">classic version</Link>
           </li>
           <li>
-            <Link to="/WebglCarrousel">webgl version</Link>
+            <Link to="/WebglCarousel">webgl version</Link>
           </li>
         </List>
       </Header>

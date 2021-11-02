@@ -1,43 +1,18 @@
-import styled from "styled-components";
-import { motion } from "framer-motion";
 import { useRef, useState, useEffect, forwardRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { useCarrousel } from "../hooks/useCarrousel";
-import clamp from "../utils/clamp";
-import Close from "../components/Close";
-/**
- * Images
- */
-const images = [
-  {
-    src: "https://picsum.photos/id/227/920/500",
-  },
-  {
-    src: "https://picsum.photos/id/127/800/700",
-  },
-  {
-    src: "https://picsum.photos/id/204/700/300",
-  },
-  {
-    src: "https://picsum.photos/id/437/600/400",
-  },
-  {
-    src: "https://picsum.photos/id/230/1200/500",
-  },
-  {
-    src: "https://picsum.photos/id/231/900/700",
-  },
-  {
-    src: "https://picsum.photos/id/257/880/400",
-  },
-  {
-    src: "https://picsum.photos/id/217/870/500",
-  },
-];
+import { usecarousel } from "./usecarousel";
+import clamp from "../../utils/clamp";
+
+// Components
+import Close from "../../components/Close";
+
+// Styles
+import styled from "styled-components";
+import { device } from "../../styles/GlobalStyles";
+import { motion } from "framer-motion";
 
 /**
  *
- * Animations
+ * Animation Page
  */
 const revealY = {
   hidden: {
@@ -54,20 +29,71 @@ const revealY = {
 };
 
 /**
+ * Images
+ */
+const images = [
+  {
+    title: "title image-1",
+    src: "https://picsum.photos/id/227/920/500",
+  },
+  {
+    title: "title image-2",
+    src: "https://picsum.photos/id/127/800/700",
+  },
+  {
+    title: "title image-3",
+    src: "https://picsum.photos/id/204/700/300",
+  },
+  {
+    title: "title image-4",
+    src: "https://picsum.photos/id/437/600/400",
+  },
+  {
+    title: "title image-5",
+    src: "https://picsum.photos/id/230/1200/500",
+  },
+  {
+    title: "title image-6",
+    src: "https://picsum.photos/id/231/1900/700",
+  },
+  {
+    title: "title image-7",
+    src: "https://picsum.photos/id/257/880/400",
+  },
+  {
+    title: "title image-8",
+    src: "https://picsum.photos/id/217/870/500",
+  },
+];
+
+/**
  *
  * Styles
  */
 const ClassicPage = styled.div`
-  background-color: ${({ theme }) => theme.colors.black};
   height: 100vh;
   padding-bottom: 2rem;
   display: flex;
   align-items: flex-end;
+  background-color: ${({ theme }) => theme.colors.black};
+  color: ${({ theme }) => theme.colors.white};
 
-  .close {
-    position: fixed;
-    top: 10%;
-    left: 10%;
+  h1 {
+    position: absolute;
+    top: 7%;
+    left: 5%;
+    font-family: ${({ theme }) => theme.fonts.detail};
+    text-transform: uppercase;
+    font-style: italic;
+    font-size: 2rem;
+  }
+
+  @media ${device.mobile} {
+    font-size: 1rem;
+    h1 {
+      top: 5%;
+      font-size: 2rem;
+    }
   }
 `;
 
@@ -81,18 +107,20 @@ const Slider = styled.div`
       flex-shrink: 0;
       margin-top: auto;
       padding: 0 1rem;
-      display: flex;
-      justify-content: center;
-      align-content: center;
+
       .slide__image-wrapper {
-        /* width: 50vw; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
         overflow: hidden;
         img {
-          width: 110%;
-          height: 110%;
-          height: auto;
+          max-height: 50vh;
+          width: auto;
+          /* height: 100%; */
+          opacity: 0;
           filter: grayscale(100%);
-          transition: transform 600ms, filter 600ms;
+          transform: scale(1.2);
+          transition: transform 600ms, filter 600ms, opacity 600ms 300ms;
 
           &:hover {
             filter: grayscale(0);
@@ -104,42 +132,38 @@ const Slider = styled.div`
 `;
 
 const SliderControls = styled.div`
-  position: fixed;
+  position: absolute;
   top: 30%;
   left: 5%;
-  color: white;
   button {
     margin-right: 2rem;
-    color: ${({ theme }) => theme.colors.white};
-
     font-size: 1.4rem;
     text-transform: uppercase;
-
     transition: opacity 100ms;
+    color: ${({ theme }) => theme.colors.white};
 
     &:hover {
       opacity: 0.5;
     }
   }
 
-  .controls {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
+  @media ${device.mobile} {
+    top: 5%;
+    left: 45%;
+    button {
+      font-size: 1rem;
+    }
   }
 `;
 
 const Title = styled.div`
-  position: fixed;
+  position: absolute;
   top: 30%;
   left: 30%;
-  color: ${({ theme }) => theme.colors.white};
   text-transform: uppercase;
   text-align: right;
   font-size: 1.4rem;
+  color: ${({ theme }) => theme.colors.white};
 
   .title-container {
     overflow: hidden;
@@ -157,6 +181,10 @@ const Title = styled.div`
       transition: transform 600ms ease-out;
     }
   }
+  @media ${device.mobile} {
+    font-size: 1rem;
+    top: 5%;
+  }
 `;
 
 /**
@@ -165,13 +193,15 @@ const Title = styled.div`
 const Slide = forwardRef(({ index, slide, titles }, ref) => {
   const imgRef = useRef();
 
+  // Hover effect parallax
   const handleMouseMove = (event) => {
-    const el = imgRef.current;
+    const image = imgRef.current;
     const offsetX = clamp(event.movementX * 0.7, -10, 10);
     const offsetY = clamp(event.movementY * 0.7, -10, 10);
-    el.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+    image.style.transform = `scale(1.2) translate3d(${offsetX}px, ${offsetY}px, 0)`;
   };
 
+  // Display title + color image
   const handleMouseEnter = () => {
     const titleContainer = titles.current[index];
     const title = titleContainer.querySelector("h3");
@@ -182,7 +212,10 @@ const Slide = forwardRef(({ index, slide, titles }, ref) => {
     description.style.transform = "translate3d(0, 0, 0)";
   };
 
+  // Hide title + b&w image
   const handleMouseLeave = () => {
+    const image = imgRef.current;
+
     const titleContainer = titles.current[index];
     const title = titleContainer.querySelector("h3");
     const description = titleContainer.querySelector("p");
@@ -192,9 +225,15 @@ const Slide = forwardRef(({ index, slide, titles }, ref) => {
 
     title.style.transform = "translate3d(0, -100%, 0)";
     description.style.transform = "translate3d(0, 100%, 0)";
+
+    image.style.transform = ` scale(1.2) translate3d(0, 0, 0)`;
   };
 
-  const { src, headline } = slide;
+  // Fade in image when is loaded
+  const imageLoaded = (event) => {
+    event.target.style.opacity = 1;
+  };
+
   return (
     <li
       ref={ref}
@@ -204,21 +243,25 @@ const Slide = forwardRef(({ index, slide, titles }, ref) => {
       onMouseLeave={handleMouseLeave}
     >
       <div className="slide__image-wrapper">
-        <img ref={imgRef} className="slide__image" src={src} />
+        <img ref={imgRef} className="slide__image" src={slide.src} alt={slide.title} onLoad={imageLoaded} />
       </div>
     </li>
   );
 });
 
-const ClassicCarrousel = () => {
+/**
+ * Page
+ */
+const ClassicCarousel = () => {
   const slides = images;
   const pageRef = useRef();
+  const sliderRef = useRef();
   const itemsRef = useRef([]);
   const titlesRef = useRef([]);
-  const sliderRef = useRef();
 
-  const [offset, next, prev] = useCarrousel(slides, itemsRef);
+  const [offset, next, prev] = usecarousel(slides, itemsRef);
 
+  // Controls slider with arrows
   const handleKey = (e) => {
     switch (e.key) {
       case "ArrowLeft":
@@ -236,6 +279,7 @@ const ClassicCarrousel = () => {
     }
   };
 
+  // Focus page div to listen onKeyDown
   useEffect(() => {
     pageRef.current.focus();
   }, []);
@@ -253,36 +297,38 @@ const ClassicCarrousel = () => {
       exit="exit"
     >
       <Close />
+
+      <h1>Classic Version</h1>
+
       <Slider className="slider">
         <div ref={sliderRef} className="slider__wrapper" style={{ transform: `translateX(-${offset}%)` }}>
-          {/* <div ref={sliderRef} className="slider__wrapper" style={{ transform: `translateX(${offset}px)` }}> */}
           {slides.map((slide, i) => {
             return (
               <Slide key={i} index={i} slide={slide} ref={(el) => (itemsRef.current[i] = el)} titles={titlesRef} />
             );
           })}
         </div>
-        {slides.map((slide, i) => {
-          return (
-            <Title key={i} slide={slide} ref={(el) => (titlesRef.current[i] = el)}>
-              <div className="title-container">
-                <h3>Image {i} - title</h3>
-              </div>
-              <div className="description-container">
-                <p>Image description</p>
-              </div>
-            </Title>
-          );
-        })}
-        <SliderControls>
-          <button onClick={prev}>Prev</button>
-          <button onClick={next}>Next</button>
-
-          <div className="controls"></div>
-        </SliderControls>
       </Slider>
+
+      {slides.map((slide, i) => {
+        return (
+          <Title key={i} slide={slide} ref={(el) => (titlesRef.current[i] = el)}>
+            <div className="title-container">
+              <h3>{slide.title}</h3>
+            </div>
+            <div className="description-container">
+              <p>Image description</p>
+            </div>
+          </Title>
+        );
+      })}
+
+      <SliderControls>
+        <button onClick={prev}>Prev</button>
+        <button onClick={next}>Next</button>
+      </SliderControls>
     </ClassicPage>
   );
 };
 
-export default ClassicCarrousel;
+export default ClassicCarousel;
