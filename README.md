@@ -12,6 +12,16 @@
 npm install
 ```
 
+## Stack
+
+<ul>
+    <li>Vite</li>
+    <li>React</li>
+    <li>React Three Fiber</li>
+    <li>Styled Components</li>
+    <li>Framer motion</li>
+</ul>
+
 ## Author
 
 👤 **Roman Jean-Elie**
