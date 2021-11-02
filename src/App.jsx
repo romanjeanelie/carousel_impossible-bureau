@@ -5,7 +5,7 @@ import { GlobalStyles } from "./styles/GlobalStyles";
 import { ThemeProvider } from "styled-components";
 
 import Home from "./pages/Home";
-import Webglcarousel from "./pages/WebglCarousel";
+import WebglCarousel from "./pages/WebglCarousel";
 import ClassicCarousel from "./pages/ClassicCarousel";
 
 import { useViewport } from "./hooks/Viewport";
@@ -37,7 +37,7 @@ function App() {
         {!isPortrait && (
           <Switch location={location} key={location.key}>
             <Route path="/" component={Home} exact />
-            <Route path="/WebglCarousel" component={Webglcarousel} />
+            <Route path="/WebglCarousel" component={WebglCarousel} />
             <Route path="/ClassicCarousel" component={ClassicCarousel} />
           </Switch>
         )}

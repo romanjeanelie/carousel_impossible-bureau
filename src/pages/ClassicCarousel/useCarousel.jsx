@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const usecarousel = (slides, refs) => {
+export const useCarousel = (slides, refs) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [offset, setOffset] = useState(0);
 

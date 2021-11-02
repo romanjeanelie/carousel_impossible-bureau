@@ -260,7 +260,7 @@ function Content({ images, displayTitle, hideTitle, cursor, lines, pageWidth, is
 /**
  * Page
  */
-const Webglcarousel = () => {
+const WebglCarousel = () => {
   const { isTablet, isMobile, width } = useViewport();
 
   // Camera
@@ -320,4 +320,4 @@ const Webglcarousel = () => {
   );
 };
 
-export default Webglcarousel;
+export default WebglCarousel;

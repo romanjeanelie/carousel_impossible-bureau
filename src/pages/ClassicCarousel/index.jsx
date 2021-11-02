@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, forwardRef } from "react";
-import { usecarousel } from "./usecarousel";
+import { useCarousel } from "./useCarousel";
 import clamp from "../../utils/clamp";
 
 // Components
@@ -259,7 +259,7 @@ const ClassicCarousel = () => {
   const itemsRef = useRef([]);
   const titlesRef = useRef([]);
 
-  const [offset, next, prev] = usecarousel(slides, itemsRef);
+  const [offset, next, prev] = useCarousel(slides, itemsRef);
 
   // Controls slider with arrows
   const handleKey = (e) => {
