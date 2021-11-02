@@ -1,10 +1,10 @@
-<h1 align="center">Welcome to Carousel for Impossible Bureau 👋</h1>
+<h1 align="center">Carousel for Impossible Bureau</h1>
 <p>
 </p>
 
 > Two carousels built with React
 
-### 🏠 [Homepage](https://carouselforimpossiblebureau.netlify.app/)
+### 🏠 [Demo](https://carouselforimpossiblebureau.netlify.app/)
 
 ## Install
 
@@ -16,11 +16,4 @@ npm install
 
 👤 **Roman Jean-Elie**
 
-* Github: [@romanjeanelie](https://github.com/romanjeanelie)
-
-## Show your support
-
-Give a ⭐️ if this project helped you!
-
-***
-_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
+- Github: [@romanjeanelie](https://github.com/romanjeanelie)
